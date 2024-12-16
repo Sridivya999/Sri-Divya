@@ -1,0 +1,32 @@
+import requests
+from bs4 import BeautifulSoup
+from sentence_transformers import SentenceTransformer
+import faiss
+
+# 1. Data Ingestion
+def crawl_and_scrape(urls):
+    for url in urls:
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        # Extract relevant content and create chunks
+        chunks = extract_chunks(soup)
+        # Convert chunks to embeddings
+        embeddings = model.encode(chunks)
+        # Add embeddings and metadata to vector database
+        index.add(embeddings)
+
+def query_and_retrieve(query):
+    query_embedding = model.encode([query])
+    distances, indices = index.search(query_embedding, k=5)
+    relevant_chunks = [chunks[i] for i in indices[0]]
+    return relevant_chunks
+def generate_response(query, relevant_chunks):
+    prompt = f"Query: {query}\nRelevant Information:\n{relevant_chunks}"
+    response = llm.generate_text(prompt)
+    return response
+urls = ["https://www.uchicago.edu/", "https://www.washington.edu/", ...]
+crawl_and_scrape(urls)
+query = "What are the top programs at the University of Chicago?"
+relevant_chunks = query_and_retrieve(query)
+response = generate_response(query, relevant_chunks)
+print(response)
